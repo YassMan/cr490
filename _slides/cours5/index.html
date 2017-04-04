@@ -16,6 +16,48 @@ reveal_config:
 </section>
 <section data-markdown>
   # Demo Vault
+  Vault est un outil de gestion des secrets.
+  Basé sur OpenSSL(implémentation des primitives), Vault ne fait pas de crypto comme tel, sauf sur des petites quantités de données comme CloudKMS,
+  mais ne remplace pas OpenSSL pour les primitives cryptographiques.
+</section>
+<section data-markdown>
+  # Demo Vault
+   Vault permet de répondre aux AAA pour les secrets et facilite la vie des développeurs.  Vault est composé de  2 parties, un serveur et un client.
+   Donne un API générique pour gestion des secrets ;peu importe le type de secret, manière de s’authentifier, etc. enlèvele fardeau des développeurs d’avoir à se soucier de toutes les techniques de gestion vues précédemment.
+   Vault utilise un concept similaire à un système de fichiers pour accéder à différents modules, ou caractéristiques, permettant différents types d’actions; mais on doit les « monter ».
+   Similarité avec système de fichiers (url via api) POSIX mais on ne monte pas du stockage de blocs, on monte des backends permettant de gérer nos secrets.
+</section>
+<section data-markdown>
+  # Demo Vault
+   Principe où les clés utilisées pour chiffrer les données(MK(KEK(DEK)) sont chiffrées avec une clé résidant en mémoire donc, si on arrive à télécharger toutes les données de Vault enregistrées sur le disque
+   on ne pourrait pas y accéder car elles sont chiffrées avec une clé stockée en mémoire.
+   Attention au risque d’un memory dump à moins d’utiliser des enclaves (SGX) car la clé doit être lue par un processus, lisible à un moment ou à un autre pendant son stockage en mémoire;
+   une personne ayant un accès root sur la machine roulant le serveur Vault pourrait donc accéder au contenu de la mémoire et reconstruire la clé.
+</section>
+<section data-markdown>
+  # Demo Vault
+En roulant Vault dans un contexte Google cloud, AWS, etc l’hyperviseur peut voir le contenu de la mémoire de la VM;
+ un utilisateur malveillant y ayant un accès privilégié pourrait avoir accès à ces clés sans laisser de traces auditables directement pour le propriétaire de la VM.
+Avec une bonne configuration de durcissement il pourrait y avoir un moyen de laisser des traces advenant un tel cas mais la question demeure à savoir si quelqu’un verra ces traces ou s’en souciera.
+Les différentes couches d’abstraction qui sont en dessous de notre position dans la pile technologique rendent possible un accès à la mémoire dont on ne pourrait avoir aucune traces.
+On peut donc demander aux fournisseurs cloud et à n’importe qui roulant du code pour nous plus bas comment ils détecteraient un tel incident et serait rapporté.  Sommes nous prêts à accepter un tel vecteur d’attaque, sans visibilité, sur des clés?
+Généralement bien géré chez les grands fournisseurs cloud, voir contrat de service et contrôles appliqués.
+Vérifier si la clé est en mémoire seulement ou si elle peut passer par la mémoire virtuelle (swap secondaire sur disque).
+</section>
+<section data-markdown>
+  # Demo Vault
+  Vault a un processus de fermeture et ouverture de voûte (seal & unseal).
+  La masterKey de Vault doit être amenée en mémoire et va y rester afin d’enforcer les critères AAA.
+  Vault utilise un moyen d’y parvenir sans qu’un seul individu ne puisse avoir accès à l’ensemble de la clé.
+  Au premier démarrage de Vault, une clé est générée puis séparée en sous-clés, permettant de régénérer la clé principale.
+  Par défaut, vault génère 5 sous-clés lors de l’initialisation visible pour l’utilisateur initialisant Vault mais on pourra y pallier.
+  Par défaut, on peut reconstruire la clé principale avec seulement 3 des 5 sous-clés, peu importe l’ordre.
+  L’objectif est de donner les 5 morceaux à 5 personnes (ou outils externes style KMS) différentes; personne ne peut ouvrir la voute seul, il faudra un certain niveau de collusion (principe de séparation des tâches).
+
+</section>
+<section data-markdown>
+  # Demo Vault
+    https://www.vaultproject.io/#/demo/0
 </section>
 <section data-markdown>
   <section data-markdown>
